@@ -1,0 +1,96 @@
+#!/bin/bash
+
+# Instalación del sistema base
+# (Asumiendo que estás iniciando desde un entorno Arch Linux mínimo)
+
+# Configuración del sistema base
+pacman -Syu --noconfirm
+pacman -S --noconfirm base-devel git
+
+# Agregar un nuevo usuario
+useradd -m -g users -G wheel -s /bin/zsh alucard2448
+
+# Establecer la contraseña para el nuevo usuario
+echo 'alucard2448:wzh2448' | chpasswd
+
+# Instalación de i3-gaps, Kitty, Zsh, y herramientas adicionales
+pacman -S --noconfirm i3-gaps kitty zsh nmap medusa wireshark burpsuite hydra
+
+# Configuración de Zsh
+# (Puedes personalizar esto según tus preferencias)
+chsh -s $(which zsh) alucard2448
+
+# Configuración de alias útiles
+echo 'alias nmapscan="nmap -p 1-65535 -sV -sC"' >> /home/alucard2448/.zshrc
+echo 'alias gobusterdir="gobuster dir -u"' >> /home/alucard2448/.zshrc
+
+# Configuración de la interfaz de red para monitorizar
+# Reemplaza 'wlan0' con el nombre de tu interfaz de red inalámbrica
+airmon-ng start wlan0
+
+# Iniciar servicios de pentesting automáticamente
+systemctl start postgresql
+systemctl start metasploit
+
+# Instalación de i3status
+pacman -S --noconfirm i3status
+
+# Instalación de apt y configuración
+pacman -S --noconfirm yay
+yay -S --noconfirm apt
+sudo -u alucard2448 yay -S --noconfirm pacman
+
+# Instalación de Metasploit
+sudo -u alucard2448 yay -S --noconfirm metasploit
+
+# Configuración de i3-gaps
+echo 'gaps inner 10
+gaps outer 10' >> /home/alucard2448/.config/i3/config
+
+# Configuración de i3status
+echo 'general {
+        colors = true
+        interval = 5
+        output_format = "i3bar"
+        color_good = "#00FF00"
+        color_degraded = "#FFFF00"
+        color_bad = "#FF0000"
+        separator = "|"
+}
+
+order += "ipv6"
+order += "ethernet"
+order += "wireless"
+order += "battery 0"
+order += "time" ' > /home/alucard2448/.config/i3status/config
+
+# Configuración de la barra de tareas con color de fondo personalizado
+echo 'bar {
+  position top
+  status_command i3status
+  colors {
+    background #6933b2
+  }
+  workspace_buttons yes
+  strip_workspace_numbers yes
+  workspace_buttons_padding 5
+
+  # Agregar el lanzador de Kitty a la barra
+  status_command i3bar -t -m
+
+  # Agregar Firefox a la barra
+  exec firefox
+}' >> /home/alucard2448/.config/i3/config
+
+# Configuración para mostrar la dirección IP en la barra de tareas
+echo 'status_command i3status | while :
+do
+  echo "IP: $(ip addr show dev wlan0 | grep "inet " | awk "{print \$2}" | cut -d"/" -f1)"
+  sleep 1
+done | i3bar -t' >> /home/alucard2448/.config/i3/config
+
+# Instalación de Firefox
+pacman -S --noconfirm firefox
+
+# Reiniciar el entorno gráfico
+startx
