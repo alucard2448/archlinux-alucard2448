@@ -1,47 +1,26 @@
 #!/bin/bash
 
-# Instalación del sistema base
-# (Asumiendo que estás iniciando desde un entorno Arch Linux mínimo)
-
 # Configuración del sistema base
-pacman -Syu --noconfirm
-pacman -S --noconfirm base-devel git
+apt update
+apt upgrade -y
+apt install -y build-essential git zsh
 
 # Agregar un nuevo usuario
-useradd -m -g users -G wheel -s /bin/zsh alucard2448
+useradd -m -g users -G sudo -s /bin/zsh alucard2448
 
 # Establecer la contraseña para el nuevo usuario
 echo 'alucard2448:wzh2448' | chpasswd
 
-# Instalación de i3-gaps, Kitty, Zsh, y herramientas adicionales
-pacman -S --noconfirm i3-gaps kitty zsh nmap medusa wireshark burpsuite hydra
-
 # Configuración de Zsh
-# (Puedes personalizar esto según tus preferencias)
 chsh -s $(which zsh) alucard2448
 
-# Configuración de alias útiles
-echo 'alias nmapscan="nmap -p 1-65535 -sV -sC"' >> /home/alucard2448/.zshrc
-echo 'alias gobusterdir="gobuster dir -u"' >> /home/alucard2448/.zshrc
+# Configuración de la interfaz de red para monitorizar (Ajustar según la configuración de la máquina virtual)
+# Por ejemplo, para una interfaz de red cableada eth0:
+# ip link set eth0 promisc on
+# dhclient eth0
 
-# Configuración de la interfaz de red para monitorizar
-# Reemplaza 'wlan0' con el nombre de tu interfaz de red inalámbrica
-airmon-ng start wlan0
-
-# Iniciar servicios de pentesting automáticamente
-systemctl start postgresql
-systemctl start metasploit
-
-# Instalación de i3status
-pacman -S --noconfirm i3status
-
-# Instalación de apt y configuración
-pacman -S --noconfirm yay
-yay -S --noconfirm apt
-sudo -u alucard2448 yay -S --noconfirm pacman
-
-# Instalación de Metasploit
-sudo -u alucard2448 yay -S --noconfirm metasploit
+# Instalación de i3-gaps, Kitty y Zsh (puedes agregar más paquetes según tus necesidades)
+apt install -y i3-gaps kitty zsh
 
 # Configuración de i3-gaps
 echo 'gaps inner 10
@@ -76,21 +55,21 @@ echo 'bar {
   workspace_buttons_padding 5
 
   # Agregar el lanzador de Kitty a la barra
-  status_command i3bar -t -m
+  exec kitty
 
-  # Agregar Firefox a la barra
-  exec firefox
+  # Agregar Firefox a la barra (si no está instalado)
+  if ! command -v firefox &> /dev/null
+  then
+    exec firefox
+  fi
 }' >> /home/alucard2448/.config/i3/config
 
 # Configuración para mostrar la dirección IP en la barra de tareas
 echo 'status_command i3status | while :
 do
-  echo "IP: $(ip addr show dev wlan0 | grep "inet " | awk "{print \$2}" | cut -d"/" -f1)"
+  echo "IP: $(ip addr show dev eth0 | grep "inet " | awk "{print \$2}" | cut -d"/" -f1)"
   sleep 1
 done | i3bar -t' >> /home/alucard2448/.config/i3/config
-
-# Instalación de Firefox
-pacman -S --noconfirm firefox
 
 # Reiniciar el entorno gráfico
 startx
